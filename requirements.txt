@@ -1,0 +1,8 @@
+streamlit
+pandas
+numpy
+joblib
+# IMPORTANTE: fija la MISMA versión de scikit-learn que usaste en Colab.
+# En Colab ejecuta: import sklearn; print(sklearn.__version__)
+# y reemplaza la línea de abajo, p. ej.: scikit-learn==1.6.1
+scikit-learn==1.6.1

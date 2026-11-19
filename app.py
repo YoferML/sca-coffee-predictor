@@ -29,6 +29,28 @@ NOTAS_POSITIVAS = ["Chocolate", "Caramelo", "Panela", "Miel", "Nueces", "Naranja
                    "Limon", "Frutos_Rojos", "Durazno", "Jazmin", "Floral", "Especias"]
 
 
+PAISES_ES = {
+    "Mexico": "México", "Colombia": "Colombia", "Guatemala": "Guatemala", "Brazil": "Brasil",
+    "Taiwan": "Taiwán", "United States (Hawaii)": "EE. UU. (Hawái)", "Honduras": "Honduras",
+    "Costa Rica": "Costa Rica", "Ethiopia": "Etiopía", "Tanzania, United Republic Of": "Tanzania",
+    "Thailand": "Tailandia", "Uganda": "Uganda", "Peru": "Perú", "Otro": "Otro país",
+}
+
+
+def opciones_pais(paises_modelo):
+    """Lista en español con Perú siempre primero; devuelve (etiquetas, {etiqueta: valor del modelo})."""
+    mapa = {PAISES_ES.get(p, p): p for p in paises_modelo}
+    # El CSV tiene solo 10 lotes de Perú: si el modelo no lo trae como categoría, usa "Otro"
+    mapa["Perú"] = "Peru" if "Peru" in paises_modelo else "Otro"
+    etiquetas = ["Perú"] + sorted(e for e in mapa if e != "Perú")
+    return etiquetas, mapa
+
+
+def indice(opciones, preferido):
+    """Posición de `preferido` en la lista (0 si no está)."""
+    return opciones.index(preferido) if preferido in opciones else 0
+
+
 # ------------------------------------------------------------- LÓGICA (sin UI)
 def calcular_puntaje_sca(ficha, tazas_defecto, peso_defecto):
     """Suma de los 10 atributos − Σ(tazas afectadas × peso del defecto).
@@ -78,10 +100,12 @@ def pestana_evaluar(art):
         c1, c2, c3 = st.columns(3)
         altitud = c1.slider("Altitud (msnm)", 300, 3000, 1600, 50)
         humedad = c2.slider("Humedad (%)", 5.0, 20.0, 11.0, 0.1)
-        proceso = c3.selectbox("Proceso", cats["proceso"])
+        proceso = c3.selectbox("Proceso", cats["proceso"], index=indice(cats["proceso"], "Lavado"))
         c4, c5, c6, c7 = st.columns(4)
-        variedad = c4.selectbox("Variedad", cats["variedad"])
-        pais = c5.selectbox("País", cats["pais"])
+        variedad = c4.selectbox("Variedad", cats["variedad"], index=indice(cats["variedad"], "Caturra"))
+        etiquetas_pais, mapa_pais = opciones_pais(cats["pais"])
+        pais_sel = c5.selectbox("País", etiquetas_pais)
+        pais = mapa_pais[pais_sel]
         def1 = c6.number_input("Defectos categoría 1", 0, 30, 0)
         def2 = c7.number_input("Defectos categoría 2", 0, 60, 0)
 
@@ -141,8 +165,12 @@ def pestana_evaluar(art):
     filas.append({"Concepto": "Defectos de taza", "Detalle": "tazas × peso del defecto",
                   "Puntos": -float(descuento)})
     filas.append({"Concepto": "TOTAL", "Detalle": "", "Puntos": puntaje})
-    st.dataframe(pd.DataFrame(filas), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(filas), hide_index=True, use_container_width=True,
+                 height=(len(filas) + 1) * 35 + 3)
 
+    if pais_sel == "Perú" and pais != "Peru":
+        st.info("🇵🇪 El dataset CQI tiene solo 10 lotes de Perú, así que el estimado ML usa un perfil "
+                "general (\"otro país\"). La fórmula SCA del puntaje final es exacta para cualquier origen.")
     if ajuste_limpia:
         st.info("ℹ️ Las tazas limpias se ajustaron: una taza con defecto no puede contarse como limpia.")
     if abs(diferencia) > umbral:

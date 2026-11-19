@@ -315,7 +315,7 @@ La aplicación se abrirá localmente en el navegador.
 
 Para aprender qué información ingresar en cada campo de la aplicación, consultar:
 
-**[Ficha de uso: Estimador de puntaje SCA](docs/manual-usuario.md)**
+**[Ficha de uso: Estimador de puntaje SCA](docs/manual-usuario.pdf)**
 
 La guía explica:
 

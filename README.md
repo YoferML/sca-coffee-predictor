@@ -68,33 +68,103 @@ El proyecto también contempla información relacionada con cafés de distintos 
 
 ---
 
-## 🤖 Machine Learning
+## 🤖 Modelo de Machine Learning
 
-El modelo fue desarrollado y entrenado en **Google Colab** utilizando Python y posteriormente exportado en formato `.pkl`.
+El proyecto incorpora un modelo de **regresión supervisada** para estimar el puntaje de taza de un café a partir de características del grano verde y de su información de origen.
 
-El archivo:
+### Flujo del modelo
+
+```text
+Dataset CQI
+    ↓
+Limpieza y preparación de datos
+    ↓
+Preprocesamiento de variables numéricas y categóricas
+    ↓
+Entrenamiento de modelos
+    ↓
+Validación cruzada
+    ↓
+Comparación mediante MAE y R²
+    ↓
+Random Forest Regressor
+    ↓
+modelo_sca_v3.pkl
+    ↓
+Aplicación Streamlit
+```
+
+### Dataset
+
+Se utilizó un dataset de aproximadamente 1300 lotes de café arábica procedentes del **Coffee Quality Institute (CQI)**.
+
+Después del proceso de limpieza y filtrado se utilizaron **1309 registros** para el entrenamiento y evaluación.
+
+La variable objetivo utilizada fue:
+
+`Total.Cup.Points`
+
+### Variables de entrada
+
+**Variables numéricas:**
+
+- Altitud
+- Humedad
+- Defectos de categoría 1
+- Defectos de categoría 2
+- Quakers
+- Año de cosecha
+
+**Variables categóricas:**
+
+- Método de procesamiento
+- Variedad
+- País de origen
+
+Las variables categóricas fueron transformadas mediante **One-Hot Encoding** y los valores faltantes fueron tratados mediante imputación dentro de un pipeline de Scikit-Learn.
+
+### Comparación de modelos
+
+Se evaluaron diferentes modelos de regresión mediante validación cruzada:
+
+| Modelo | MAE | R² |
+|---|---:|---:|
+| Línea base | 1.81 | -0.007 |
+| Ridge | 1.65 | 0.189 |
+| Random Forest | **1.56** | **0.239** |
+| Gradient Boosting | 1.60 | 0.228 |
+
+El modelo fue seleccionado utilizando el **MAE (Mean Absolute Error)** como criterio principal. El mejor resultado correspondió a **Random Forest Regressor**, con un MAE de **1.56 puntos**.
+
+### Modelo final
+
+El modelo seleccionado fue entrenado nuevamente con los datos disponibles y serializado mediante `joblib`.
+
+Archivo generado:
 
 ```text
 modelo_sca_v3.pkl
 ```
 
-contiene el modelo entrenado utilizado por la aplicación web.
+Este archivo contiene el modelo entrenado junto con la información necesaria para realizar las predicciones desde la aplicación.
 
-La aplicación carga este modelo y utiliza las características ingresadas por el usuario para generar una estimación.
+### Uso del modelo en la aplicación
 
-### Proceso general
+El modelo estima un puntaje esperado a partir de las características del café verde. Este valor se compara posteriormente con el puntaje calculado a partir de la ficha de evaluación.
 
-```python
-Datos de entrada
-       ↓
-Preprocesamiento
-       ↓
-Modelo entrenado
-       ↓
-Predicción
-       ↓
-Estimación del puntaje
+```text
+Características del café
+        ↓
+Random Forest
+        ↓
+Puntaje esperado por ML
+        ↓
+Comparación con puntaje SCA
+        ↓
+Revisión si la diferencia supera ±4.5 puntos
 ```
+
+De esta manera, el modelo no reemplaza la evaluación sensorial, sino que funciona como una **referencia predictiva para detectar resultados que se alejan considerablemente de lo esperado según los datos históricos**.
 
 ---
 
